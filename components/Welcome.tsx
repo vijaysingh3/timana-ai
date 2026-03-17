@@ -35,32 +35,32 @@ const quickActions = [
 
 export default function Welcome({ onQuickAsk }: WelcomeProps) {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-4">
-      <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold text-white mb-4">Timana AI</h1>
-        <p className="text-xl text-gray-400">Namaste Vijay ji! Aaj kya help chahiye?</p>
+    <div className="flex-1 flex flex-col items-center justify-center px-4 py-8 overflow-y-auto">
+      <div className="text-center mb-8">
+        <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">Timana AI</h1>
+        <p className="text-base md:text-xl text-gray-400">Namaste! Aaj kya help chahiye? 🙏</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-2xl">
         {quickActions.map((action, index) => (
           <button
             key={index}
             onClick={() => onQuickAsk(action.query)}
-            className="flex items-start gap-4 p-4 bg-timana-input rounded-lg border border-timana-border hover:border-gray-500 transition-all text-left group"
+            className="flex items-start gap-3 p-4 bg-timana-input rounded-lg border border-timana-border hover:border-gray-500 transition-all text-left group active:scale-95"
           >
-            <div className="p-2 bg-timana-bg rounded-lg group-hover:bg-timana-accent/20">
-              <action.icon size={20} className="text-timana-accent" />
+            <div className="p-2 bg-timana-bg rounded-lg group-hover:bg-timana-accent/20 flex-shrink-0">
+              <action.icon size={18} className="text-timana-accent" />
             </div>
-            <div>
-              <h3 className="text-white font-medium mb-1">{action.title}</h3>
-              <p className="text-sm text-gray-400">{action.description}</p>
+            <div className="min-w-0">
+              <h3 className="text-white font-medium mb-1 text-sm md:text-base">{action.title}</h3>
+              <p className="text-xs md:text-sm text-gray-400 truncate">{action.description}</p>
             </div>
           </button>
         ))}
       </div>
 
-      <div className="mt-12 text-sm text-gray-500">
-        💡 Tip: Direct question pucho, main Hindi aur English dono mein samajhta hoon!
+      <div className="mt-8 text-xs md:text-sm text-gray-500 text-center px-4">
+        💡 Hindi ya English — dono mein baat karo!
       </div>
     </div>
   )

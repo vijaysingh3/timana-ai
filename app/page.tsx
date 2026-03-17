@@ -7,6 +7,7 @@ import ChatArea from '@/components/ChatArea'
 import InputBox from '@/components/InputBox'
 import Welcome from '@/components/Welcome'
 import { Message, Conversation } from '@/types'
+import { Menu, X } from 'lucide-react'
 
 // ============ AUTH SCREEN ============
 function AuthScreen() {
@@ -69,6 +70,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false)
   const [user, setUser] = useState<any>(null)
   const [authChecked, setAuthChecked] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false) // ✅ Mobile sidebar state
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -133,12 +135,14 @@ export default function Home() {
     if (data) {
       setCurrentConversationId(data.id)
       setMessages([])
+      setSidebarOpen(false) // ✅ Mobile pe sidebar band karo
       loadConversations()
     }
   }
 
   const selectConversation = async (id: string) => {
     setCurrentConversationId(id)
+    setSidebarOpen(false) // ✅ Mobile pe sidebar band karo
     const { data } = await supabase
       .from('messages')
       .select('*')
@@ -268,7 +272,21 @@ export default function Home() {
 
   return (
     <div className="flex h-screen bg-timana-bg overflow-hidden">
-      <div className="hidden md:flex">
+
+      {/* ✅ Mobile Overlay — sidebar open hone pe background dim */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* ✅ Sidebar — mobile pe slide in/out */}
+      <div className={`
+        fixed md:relative z-30 h-full transition-transform duration-300
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        md:translate-x-0 md:flex
+      `}>
         <Sidebar
           conversations={conversations}
           currentId={currentConversationId}
@@ -279,7 +297,28 @@ export default function Home() {
         />
       </div>
 
+      {/* ✅ Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
+
+        {/* ✅ Mobile Top Bar */}
+        <div className="md:hidden flex items-center gap-3 px-4 py-3 bg-timana-sidebar border-b border-timana-border">
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="p-2 text-gray-400 hover:text-white transition-colors"
+          >
+            {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
+          <h1 className="text-white font-semibold text-lg">🤖 Timana AI</h1>
+          <div className="ml-auto">
+            <button
+              onClick={createNewChat}
+              className="text-xs px-3 py-1.5 bg-timana-accent text-white rounded-lg"
+            >
+              + Naya
+            </button>
+          </div>
+        </div>
+
         {messages.length === 0 ? (
           <Welcome onQuickAsk={(q) => {
             if (!currentConversationId) {

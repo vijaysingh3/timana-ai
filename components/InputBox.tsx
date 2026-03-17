@@ -17,7 +17,6 @@ export default function InputBox({ onSend, isLoading, disabled }: InputBoxProps)
     if (!message.trim() || isLoading) return
     onSend(message)
     setMessage('')
-    
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto'
     }
@@ -33,11 +32,11 @@ export default function InputBox({ onSend, isLoading, disabled }: InputBoxProps)
   const handleInput = (e: React.FormEvent<HTMLTextAreaElement>) => {
     const target = e.currentTarget
     target.style.height = 'auto'
-    target.style.height = Math.min(target.scrollHeight, 200) + 'px'
+    target.style.height = Math.min(target.scrollHeight, 150) + 'px'
   }
 
   return (
-    <div className="border-t border-timana-border bg-timana-bg p-4">
+    <div className="border-t border-timana-border bg-timana-bg p-3 md:p-4">
       <div className="max-w-3xl mx-auto">
         <div className="relative bg-timana-input rounded-xl border border-timana-border focus-within:border-gray-500 transition-colors">
           <textarea
@@ -49,20 +48,18 @@ export default function InputBox({ onSend, isLoading, disabled }: InputBoxProps)
             placeholder={disabled ? "Pehle naya chat shuru karo..." : "Message Timana AI..."}
             disabled={disabled || isLoading}
             rows={1}
-            className="w-full bg-transparent text-timana-text placeholder-gray-500 px-4 py-3 pr-12 resize-none outline-none min-h-[52px] max-h-[200px] disabled:opacity-50"
+            className="w-full bg-transparent text-timana-text placeholder-gray-500 px-4 py-3 pr-12 resize-none outline-none min-h-[48px] max-h-[150px] disabled:opacity-50 text-sm md:text-base"
           />
-          
           <button
             onClick={handleSubmit}
             disabled={!message.trim() || isLoading || disabled}
-            className="absolute right-2 bottom-2 p-2 bg-timana-accent text-white rounded-lg hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="absolute right-2 bottom-2 p-2 bg-timana-accent text-white rounded-lg hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
           >
-            <Send size={18} />
+            <Send size={16} />
           </button>
         </div>
-        
-        <p className="text-xs text-center text-gray-500 mt-2">
-          Timana AI demo mode mein hai. Real AI integration jald aa raha hai.
+        <p className="text-xs text-center text-gray-500 mt-2 hidden md:block">
+          Timana AI — Powered by GLM-4.5 Flash
         </p>
       </div>
     </div>
