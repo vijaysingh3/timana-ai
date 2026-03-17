@@ -8,7 +8,6 @@ import InputBox from '@/components/InputBox'
 import Welcome from '@/components/Welcome'
 import { Message, Conversation } from '@/types'
 
-// ============ AUTH SCREEN ============
 function AuthScreen() {
   const [loading, setLoading] = useState(false)
 
@@ -24,23 +23,13 @@ function AuthScreen() {
   return (
     <div className="min-h-screen bg-timana-bg flex items-center justify-center px-4">
       <div className="w-full max-w-md">
-
-        {/* Logo */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">🤖 Timana AI</h1>
           <p className="text-gray-400">Apna personal AI assistant</p>
         </div>
-
-        {/* Card */}
         <div className="bg-timana-sidebar border border-timana-border rounded-xl p-8">
-          <h2 className="text-xl font-semibold text-white mb-2 text-center">
-            Swagat Hai! 🙏
-          </h2>
-          <p className="text-gray-400 text-sm text-center mb-8">
-            Apne Google account se login karo
-          </p>
-
-          {/* Google Login Button */}
+          <h2 className="text-xl font-semibold text-white mb-2 text-center">Swagat Hai! 🙏</h2>
+          <p className="text-gray-400 text-sm text-center mb-8">Apne Google account se login karo</p>
           <button
             onClick={handleGoogleLogin}
             disabled={loading}
@@ -60,17 +49,13 @@ function AuthScreen() {
               </>
             )}
           </button>
-
-          <p className="text-center text-gray-500 text-xs mt-6">
-            Login karke aap hamare terms se agree karte ho
-          </p>
+          <p className="text-center text-gray-500 text-xs mt-6">Login karke aap hamare terms se agree karte ho</p>
         </div>
       </div>
     </div>
   )
 }
 
-// ============ MAIN PAGE ============
 export default function Home() {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
@@ -100,7 +85,6 @@ export default function Home() {
     })
   }, [])
 
-  // Auto scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
@@ -122,7 +106,6 @@ export default function Home() {
 
   const createNewChat = async () => {
     if (!user) return
-
     const { data } = await supabase
       .from('conversations')
       .insert([{ user_id: user.id, title: 'Naya Chat' }])
@@ -138,7 +121,6 @@ export default function Home() {
 
   const selectConversation = async (id: string) => {
     setCurrentConversationId(id)
-
     const { data } = await supabase
       .from('messages')
       .select('*')
@@ -160,7 +142,6 @@ export default function Home() {
 
     setIsLoading(true)
 
-    // User message save + show
     await supabase.from('messages').insert([{
       user_id: user.id,
       conversation_id: currentConversationId,
@@ -176,7 +157,6 @@ export default function Home() {
     }
     setMessages(prev => [...prev, userMsg])
 
-    // First message = conversation title update
     if (messages.length === 0) {
       const title = content.length > 30 ? content.substring(0, 30) + '...' : content
       await supabase
@@ -186,31 +166,37 @@ export default function Home() {
       loadConversations()
     }
 
-    // ✅ AI call - supabase.invoke ki jagah direct fetch
+    // ✅ Chat history bhi bhejo AI ko
+    const chatHistory = messages.slice(-10).map(m => ({
+      role: m.role,
+      content: m.content
+    }))
+
     try {
-      const response = await fetch(
-  '/api/chat',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-          },
-          body: JSON.stringify({
-            messages: [
-              { role: 'system', content: 'You are Timana AI. Always respond in Hindi.' },
-              { role: 'user', content }
-            ],
-            max_tokens: 1000,
-            temperature: 0.7
-          })
-        }
-      )
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [
+            {
+              role: 'system',
+              // ✅ Hinglish system prompt
+              content: `Tu Timana AI hai — ek smart aur friendly Hindi/Hinglish assistant. 
+              Hamesha Hinglish mein baat kar (Hindi + thodi English mix). 
+              Short aur clear jawab de. Markdown use kar — bold, lists, code blocks sab theek hai.
+              User ka naam mat poocho baar baar. Friendly aur helpful reh.`
+            },
+            ...chatHistory,  // ✅ Purani chat history
+            { role: 'user', content }
+          ],
+          max_tokens: 1000,
+          temperature: 0.7
+        })
+      })
 
       const data = await response.json()
 
       if (data?.success) {
-        // Content blank ho toh reasoning use karo ✅
         const aiContent = data.content && data.content.trim() !== ''
           ? data.content
           : data.reasoning || 'Kuch samajh nahi aaya, dobara pucho!'
@@ -230,7 +216,6 @@ export default function Home() {
         }
         setMessages(prev => [...prev, aiMsg])
 
-        // Update conversation timestamp
         await supabase
           .from('conversations')
           .update({ updated_at: new Date().toISOString() })
@@ -242,7 +227,7 @@ export default function Home() {
       const errMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: 'Maafi karo! AI se connect nahi ho paya. Thodi der baad try karo.',
+        content: 'Maafi karo yaar! AI se connect nahi ho paya. Thodi der baad try karo. 🙏',
         timestamp: Date.now()
       }
       setMessages(prev => [...prev, errMsg])
@@ -255,7 +240,6 @@ export default function Home() {
     await supabase.auth.signOut()
   }
 
-  // Auth check loading
   if (!authChecked) {
     return (
       <div className="min-h-screen bg-timana-bg flex items-center justify-center">
@@ -264,22 +248,23 @@ export default function Home() {
     )
   }
 
-  // Not logged in
   if (!user) return <AuthScreen />
 
-  // Logged in
   return (
-    <div className="flex h-screen bg-timana-bg">
-      <Sidebar
-        conversations={conversations}
-        currentId={currentConversationId}
-        onNewChat={createNewChat}
-        onSelect={selectConversation}
-        user={user}
-        onSignOut={signOut}
-      />
+    <div className="flex h-screen bg-timana-bg overflow-hidden">
+      {/* ✅ Mobile pe sidebar hide */}
+      <div className="hidden md:flex">
+        <Sidebar
+          conversations={conversations}
+          currentId={currentConversationId}
+          onNewChat={createNewChat}
+          onSelect={selectConversation}
+          user={user}
+          onSignOut={signOut}
+        />
+      </div>
 
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         {messages.length === 0 ? (
           <Welcome onQuickAsk={(q) => {
             if (!currentConversationId) {
@@ -295,7 +280,6 @@ export default function Home() {
             messagesEndRef={messagesEndRef}
           />
         )}
-
         <InputBox
           onSend={sendMessage}
           isLoading={isLoading}
