@@ -186,18 +186,28 @@ export default function Home() {
       loadConversations()
     }
 
-    // AI call ✅
+    // ✅ AI call - supabase.invoke ki jagah direct fetch
     try {
-      const { data } = await supabase.functions.invoke('glm-ai-test', {
-        body: {
-          messages: [
-            { role: 'system', content: 'You are Timana AI. Always respond in Hindi.' },
-            { role: 'user', content }
-          ],
-          max_tokens: 1000,   // ✅ Add kiya
-          temperature: 0.7    // ✅ Add kiya
+      const response = await fetch(
+        'https://kvtrzaaxwsxlisdjucxk.supabase.co/functions/v1/glm-ai-test',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+          },
+          body: JSON.stringify({
+            messages: [
+              { role: 'system', content: 'You are Timana AI. Always respond in Hindi.' },
+              { role: 'user', content }
+            ],
+            max_tokens: 1000,
+            temperature: 0.7
+          })
         }
-      })
+      )
+
+      const data = await response.json()
 
       if (data?.success) {
         // Content blank ho toh reasoning use karo ✅
@@ -209,13 +219,13 @@ export default function Home() {
           user_id: user.id,
           conversation_id: currentConversationId,
           role: 'assistant',
-          content: aiContent   // ✅ aiContent use kiya
+          content: aiContent
         }])
 
         const aiMsg: Message = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
-          content: aiContent,  // ✅ aiContent use kiya
+          content: aiContent,
           timestamp: Date.now()
         }
         setMessages(prev => [...prev, aiMsg])
@@ -227,7 +237,8 @@ export default function Home() {
           .eq('id', currentConversationId)
         loadConversations()
       }
-    } catch {
+    } catch (err) {
+      console.error('AI Error:', err)
       const errMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
