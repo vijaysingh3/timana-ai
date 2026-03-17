@@ -1,18 +1,12 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '@/lib/supabase'
 import Sidebar from '@/components/Sidebar'
 import ChatArea from '@/components/ChatArea'
 import InputBox from '@/components/InputBox'
 import Welcome from '@/components/Welcome'
 import { Message, Conversation } from '@/types'
-
-// ✅ Direct client banao — import ki jagah
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
 
 // ============ AUTH SCREEN ============
 function AuthScreen() {
@@ -20,11 +14,14 @@ function AuthScreen() {
 
   const handleGoogleLogin = async () => {
     setLoading(true)
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: window.location.origin }
-    })
-    if (error) console.error(error)
+    try {
+      await (supabase.auth as any).signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: window.location.origin }
+      })
+    } catch (err) {
+      console.error(err)
+    }
     setLoading(false)
   }
 
@@ -75,18 +72,22 @@ export default function Home() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    // ✅ getUser fix
     const getUser = async () => {
-      const { data } = await supabase.auth.getUser()
-      setUser(data?.user ?? null)
-      setAuthChecked(true)
-      if (data?.user) loadConversations()
+      try {
+        const authClient = supabase.auth as any
+        const { data } = await authClient.getUser()
+        setUser(data?.user ?? null)
+        setAuthChecked(true)
+        if (data?.user) loadConversations()
+      } catch {
+        setAuthChecked(true)
+      }
     }
     getUser()
 
-    // ✅ onAuthStateChange fix
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (_event: string, session: any) => {
+    const authClient = supabase.auth as any
+    const { data: authListener } = authClient.onAuthStateChange(
+      (_event: any, session: any) => {
         setUser(session?.user ?? null)
         if (session?.user) loadConversations()
         else {
@@ -98,7 +99,7 @@ export default function Home() {
     )
 
     return () => {
-      authListener.subscription.unsubscribe()
+      authListener?.subscription?.unsubscribe()
     }
   }, [])
 
@@ -183,7 +184,6 @@ export default function Home() {
       loadConversations()
     }
 
-    // ✅ Chat history bhi bhejo
     const chatHistory = messages.slice(-10).map((m: Message) => ({
       role: m.role,
       content: m.content
@@ -252,9 +252,8 @@ export default function Home() {
     }
   }
 
-  // ✅ signOut fix
   const signOut = async () => {
-    await supabase.auth.signOut()
+    await (supabase.auth as any).signOut()
   }
 
   if (!authChecked) {
