@@ -189,7 +189,7 @@ export default function Home() {
     // ✅ AI call - supabase.invoke ki jagah direct fetch
     try {
       const response = await fetch(
-        'https://kvtrzaaxwsxlisdjucxk.supabase.co/functions/v1/glm-ai-test',
+  '/api/chat',
         {
           method: 'POST',
           headers: {
