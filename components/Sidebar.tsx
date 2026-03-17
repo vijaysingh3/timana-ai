@@ -8,17 +8,21 @@ interface SidebarProps {
   currentId: string | null
   onNewChat: () => void
   onSelect: (id: string) => void
+  user?: any
+  onSignOut?: () => void
 }
 
 export default function Sidebar({ 
   conversations, 
   currentId, 
   onNewChat, 
-  onSelect 
+  onSelect,
+  user,
+  onSignOut
 }: SidebarProps) {
   return (
     <div className="w-64 bg-timana-sidebar h-full flex flex-col border-r border-timana-border">
-      {/* Header */}
+      {/* New Chat Button */}
       <div className="p-4">
         <button 
           onClick={onNewChat}
@@ -29,7 +33,7 @@ export default function Sidebar({
         </button>
       </div>
 
-      {/* Conversations List */}
+      {/* Chat List */}
       <div className="flex-1 overflow-y-auto px-2">
         <div className="text-xs text-gray-500 px-3 py-2 uppercase tracking-wider">
           Aaj ke Chats
@@ -51,7 +55,7 @@ export default function Sidebar({
         ))}
       </div>
 
-      {/* User Section */}
+      {/* User Profile + Logout */}
       <div className="p-4 border-t border-timana-border">
         <div className="flex items-center gap-3 px-3 py-2 text-gray-300 hover:bg-timana-input rounded-lg cursor-pointer transition-colors mb-2">
           <Settings size={16} />
@@ -63,10 +67,18 @@ export default function Sidebar({
             <User size={16} className="text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm text-white truncate">Vijay ji</p>
-            <p className="text-xs text-gray-500 truncate">Pro User</p>
+            <p className="text-sm text-white truncate">
+              {user?.user_metadata?.full_name || 'User'}
+            </p>
+            <p className="text-xs text-gray-500 truncate">
+              {user?.email || ''}
+            </p>
           </div>
-          <LogOut size={16} className="text-gray-400 cursor-pointer hover:text-white" />
+          <LogOut 
+            size={16} 
+            className="text-gray-400 cursor-pointer hover:text-white" 
+            onClick={onSignOut}
+          />
         </div>
       </div>
     </div>

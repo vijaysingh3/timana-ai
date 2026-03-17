@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { supabase } from '@/lib/supabase'
 import Sidebar from '@/components/Sidebar'
 import ChatArea from '@/components/ChatArea'
 import InputBox from '@/components/InputBox'
@@ -8,86 +9,180 @@ import Welcome from '@/components/Welcome'
 import { Message, Conversation } from '@/types'
 
 export default function Home() {
-  const [conversations, setConversations] = useState<Conversation[]>([
-    { id: '1', title: 'Bharat ke Facts', timestamp: Date.now() },
-    { id: '2', title: 'Python Coding Help', timestamp: Date.now() - 100000 },
-    { id: '3', title: 'Recipe Ideas', timestamp: Date.now() - 200000 },
-  ])
-  
+  const [conversations, setConversations] = useState<Conversation[]>([])
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [user, setUser] = useState<any>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
-
+  // Check login status
   useEffect(() => {
-    scrollToBottom()
-  }, [messages])
-
-  const createNewChat = () => {
-    const newId = Date.now().toString()
-    const newConv: Conversation = {
-      id: newId,
-      title: 'New Chat',
-      timestamp: Date.now()
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
+      if (user) loadConversations()
     }
-    setConversations([newConv, ...conversations])
-    setCurrentConversationId(newId)
-    setMessages([])
+    getUser()
+
+    // Auto-update when login/logout
+    supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user || null)
+      if (session?.user) loadConversations()
+    })
+  }, [])
+
+  // Load chat list
+  const loadConversations = async () => {
+    const { data } = await supabase
+      .from('conversations')
+      .select('*')
+      .order('updated_at', { ascending: false })
+
+    if (data) {
+      setConversations(data.map(conv => ({
+        id: conv.id,
+        title: conv.title,
+        timestamp: new Date(conv.updated_at).getTime()
+      })))
+    }
   }
 
-  const selectConversation = (id: string) => {
-    setCurrentConversationId(id)
-    // Mock messages load
-    if (id === '1') {
-      setMessages([
-        { id: '1', role: 'user', content: 'Bharat ke 3 amazing facts batao', timestamp: Date.now() - 10000 },
-        { id: '2', role: 'assistant', content: 'Namaste! Yeh hain 3 amazing facts:\n\n1. 🇮🇳 Bharat mein world ka sabse bada postal network hai - 1,55,000+ post offices\n2. 🏏 Chail, Himachal mein world ka sabse uncha cricket ground hai - 2,444m height pe\n3. 🎲 Snakes & Ladders game ancient India mein invent hua tha', timestamp: Date.now() - 5000 }
-      ])
-    } else {
+  // New chat button
+  const createNewChat = async () => {
+    if (!user) {
+      alert('Pehle login karo!')
+      return
+    }
+
+    const { data } = await supabase
+      .from('conversations')
+      .insert([{ user_id: user.id, title: 'New Chat' }])
+      .select()
+      .single()
+
+    if (data) {
+      setCurrentConversationId(data.id)
       setMessages([])
+      loadConversations()
     }
   }
 
-  const sendMessage = async (content: string) => {
-    if (!content.trim()) return
+  // Open chat
+  const selectConversation = async (id: string) => {
+    setCurrentConversationId(id)
+    
+    const { data } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('conversation_id', id)
+      .order('created_at', { ascending: true })
 
-    // Add user message
+    if (data) {
+      setMessages(data.map(msg => ({
+        id: msg.id,
+        role: msg.role,
+        content: msg.content,
+        timestamp: new Date(msg.created_at).getTime()
+      })))
+    }
+  }
+
+  // Send message to AI
+  const sendMessage = async (content: string) => {
+    if (!content.trim() || !user || !currentConversationId) return
+
+    setIsLoading(true)
+
+    // Save user message
+    await supabase.from('messages').insert([{
+      user_id: user.id,
+      conversation_id: currentConversationId,
+      role: 'user',
+      content: content
+    }])
+
+    // Show user message
     const userMsg: Message = {
       id: Date.now().toString(),
       role: 'user',
       content,
       timestamp: Date.now()
     }
-    
     setMessages(prev => [...prev, userMsg])
-    setIsLoading(true)
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiMsg: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: `Namaste Vijay ji! Aapne pucha: "${content}"\n\nMain Timana AI hoon, aapki madad ke liye hamesha taiyaar! Abhi main demo mode mein hoon, jald hi poori tarah se kaam karunga.\n\nAapko kya help chahiye?`,
-        timestamp: Date.now()
+    // Call AI
+    try {
+      const { data } = await supabase.functions.invoke('glm-ai-test', {
+        body: {
+          messages: [
+            { role: 'system', content: 'You are Timana AI. Always respond in Hindi.' },
+            { role: 'user', content: content }
+          ]
+        }
+      })
+
+      if (data?.success) {
+        // Save AI response
+        await supabase.from('messages').insert([{
+          user_id: user.id,
+          conversation_id: currentConversationId,
+          role: 'assistant',
+          content: data.content
+        }])
+
+        // Show AI response
+        const aiMsg: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: data.content,
+          timestamp: Date.now()
+        }
+        setMessages(prev => [...prev, aiMsg])
       }
-      setMessages(prev => [...prev, aiMsg])
+    } catch (error) {
+      alert('AI error! Please try again.')
+    } finally {
       setIsLoading(false)
-      
-      // Update conversation title if first message
-      if (messages.length === 0 && currentConversationId) {
-        setConversations(prev => prev.map(conv => 
-          conv.id === currentConversationId 
-            ? { ...conv, title: content.slice(0, 30) + '...' }
-            : conv
-        ))
-      }
-    }, 1500)
+    }
   }
 
+  // Google Login
+  const signIn = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin }
+    })
+  }
+
+  // Logout
+  const signOut = async () => {
+    await supabase.auth.signOut()
+    setUser(null)
+    setConversations([])
+    setMessages([])
+    setCurrentConversationId(null)
+  }
+
+  // Not logged in - Show login screen
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-timana-bg flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-white mb-4">🤖 Timana AI</h1>
+          <p className="text-gray-400 mb-8">Apna personal AI assistant</p>
+          <button 
+            onClick={signIn}
+            className="px-8 py-3 bg-timana-accent text-white rounded-lg hover:bg-opacity-90"
+          >
+            Google se Login
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // Logged in - Show chat
   return (
     <div className="flex h-screen bg-timana-bg">
       <Sidebar 
@@ -95,6 +190,8 @@ export default function Home() {
         currentId={currentConversationId}
         onNewChat={createNewChat}
         onSelect={selectConversation}
+        user={user}
+        onSignOut={signOut}
       />
       
       <div className="flex-1 flex flex-col">
@@ -111,7 +208,7 @@ export default function Home() {
         <InputBox 
           onSend={sendMessage} 
           isLoading={isLoading}
-          disabled={!currentConversationId && messages.length === 0}
+          disabled={!currentConversationId}
         />
       </div>
     </div>
