@@ -1,22 +1,30 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 import Sidebar from '@/components/Sidebar'
 import ChatArea from '@/components/ChatArea'
 import InputBox from '@/components/InputBox'
 import Welcome from '@/components/Welcome'
 import { Message, Conversation } from '@/types'
 
+// ✅ Direct client banao — import ki jagah
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+
+// ============ AUTH SCREEN ============
 function AuthScreen() {
   const [loading, setLoading] = useState(false)
 
   const handleGoogleLogin = async () => {
     setLoading(true)
-    await supabase.auth.signInWithOAuth({
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: window.location.origin }
     })
+    if (error) console.error(error)
     setLoading(false)
   }
 
@@ -56,6 +64,7 @@ function AuthScreen() {
   )
 }
 
+// ============ MAIN PAGE ============
 export default function Home() {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
@@ -66,23 +75,31 @@ export default function Home() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    // ✅ getUser fix
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
+      const { data } = await supabase.auth.getUser()
+      setUser(data?.user ?? null)
       setAuthChecked(true)
-      if (user) loadConversations()
+      if (data?.user) loadConversations()
     }
     getUser()
 
-    supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user || null)
-      if (session?.user) loadConversations()
-      else {
-        setConversations([])
-        setMessages([])
-        setCurrentConversationId(null)
+    // ✅ onAuthStateChange fix
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (_event: string, session: any) => {
+        setUser(session?.user ?? null)
+        if (session?.user) loadConversations()
+        else {
+          setConversations([])
+          setMessages([])
+          setCurrentConversationId(null)
+        }
       }
-    })
+    )
+
+    return () => {
+      authListener.subscription.unsubscribe()
+    }
   }, [])
 
   useEffect(() => {
@@ -96,7 +113,7 @@ export default function Home() {
       .order('updated_at', { ascending: false })
 
     if (data) {
-      setConversations(data.map(conv => ({
+      setConversations(data.map((conv: any) => ({
         id: conv.id,
         title: conv.title,
         timestamp: new Date(conv.updated_at).getTime()
@@ -128,7 +145,7 @@ export default function Home() {
       .order('created_at', { ascending: true })
 
     if (data) {
-      setMessages(data.map(msg => ({
+      setMessages(data.map((msg: any) => ({
         id: msg.id,
         role: msg.role,
         content: msg.content,
@@ -166,8 +183,8 @@ export default function Home() {
       loadConversations()
     }
 
-    // ✅ Chat history bhi bhejo AI ko
-    const chatHistory = messages.slice(-10).map(m => ({
+    // ✅ Chat history bhi bhejo
+    const chatHistory = messages.slice(-10).map((m: Message) => ({
       role: m.role,
       content: m.content
     }))
@@ -180,13 +197,12 @@ export default function Home() {
           messages: [
             {
               role: 'system',
-              // ✅ Hinglish system prompt
               content: `Tu Timana AI hai — ek smart aur friendly Hindi/Hinglish assistant. 
               Hamesha Hinglish mein baat kar (Hindi + thodi English mix). 
               Short aur clear jawab de. Markdown use kar — bold, lists, code blocks sab theek hai.
-              User ka naam mat poocho baar baar. Friendly aur helpful reh.`
+              Friendly aur helpful reh.`
             },
-            ...chatHistory,  // ✅ Purani chat history
+            ...chatHistory,
             { role: 'user', content }
           ],
           max_tokens: 1000,
@@ -236,6 +252,7 @@ export default function Home() {
     }
   }
 
+  // ✅ signOut fix
   const signOut = async () => {
     await supabase.auth.signOut()
   }
@@ -252,7 +269,6 @@ export default function Home() {
 
   return (
     <div className="flex h-screen bg-timana-bg overflow-hidden">
-      {/* ✅ Mobile pe sidebar hide */}
       <div className="hidden md:flex">
         <Sidebar
           conversations={conversations}
