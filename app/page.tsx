@@ -186,29 +186,36 @@ export default function Home() {
       loadConversations()
     }
 
-    // AI call
+    // AI call ✅
     try {
       const { data } = await supabase.functions.invoke('glm-ai-test', {
         body: {
           messages: [
             { role: 'system', content: 'You are Timana AI. Always respond in Hindi.' },
             { role: 'user', content }
-          ]
+          ],
+          max_tokens: 1000,   // ✅ Add kiya
+          temperature: 0.7    // ✅ Add kiya
         }
       })
 
       if (data?.success) {
+        // Content blank ho toh reasoning use karo ✅
+        const aiContent = data.content && data.content.trim() !== ''
+          ? data.content
+          : data.reasoning || 'Kuch samajh nahi aaya, dobara pucho!'
+
         await supabase.from('messages').insert([{
           user_id: user.id,
           conversation_id: currentConversationId,
           role: 'assistant',
-          content: data.content
+          content: aiContent   // ✅ aiContent use kiya
         }])
 
         const aiMsg: Message = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
-          content: data.content,
+          content: aiContent,  // ✅ aiContent use kiya
           timestamp: Date.now()
         }
         setMessages(prev => [...prev, aiMsg])
