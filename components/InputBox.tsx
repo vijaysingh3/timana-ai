@@ -32,35 +32,32 @@ export default function InputBox({ onSend, isLoading, disabled }: InputBoxProps)
   const handleInput = (e: React.FormEvent<HTMLTextAreaElement>) => {
     const target = e.currentTarget
     target.style.height = 'auto'
-    target.style.height = Math.min(target.scrollHeight, 150) + 'px'
+    target.style.height = Math.min(target.scrollHeight, 120) + 'px'
   }
 
   return (
-    <div className="border-t border-timana-border bg-timana-bg p-3 md:p-4">
+    <div className="border-t border-timana-border bg-timana-bg px-3 py-2 md:px-4 md:py-3 flex-shrink-0">
       <div className="max-w-3xl mx-auto">
-        <div className="relative bg-timana-input rounded-xl border border-timana-border focus-within:border-gray-500 transition-colors">
+        <div className="relative bg-timana-input rounded-xl border border-timana-border focus-within:border-gray-400 transition-colors">
           <textarea
             ref={textareaRef}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
             onInput={handleInput}
-            placeholder={disabled ? "Pehle naya chat shuru karo..." : "Message Timana AI..."}
+            placeholder={disabled ? "Naya chat shuru karo..." : "Message Timana AI..."}
             disabled={disabled || isLoading}
             rows={1}
-            className="w-full bg-transparent text-timana-text placeholder-gray-500 px-4 py-3 pr-12 resize-none outline-none min-h-[48px] max-h-[150px] disabled:opacity-50 text-sm md:text-base"
+            className="w-full bg-transparent text-timana-text placeholder-gray-500 px-3 py-2.5 pr-11 resize-none outline-none min-h-[44px] max-h-[120px] disabled:opacity-50 text-sm"
           />
           <button
             onClick={handleSubmit}
             disabled={!message.trim() || isLoading || disabled}
-            className="absolute right-2 bottom-2 p-2 bg-timana-accent text-white rounded-lg hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
+            className="absolute right-2 bottom-1.5 p-2 bg-timana-accent text-white rounded-lg hover:bg-opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95"
           >
-            <Send size={16} />
+            <Send size={15} />
           </button>
         </div>
-        <p className="text-xs text-center text-gray-500 mt-2 hidden md:block">
-          Timana AI — Powered by GLM-4.5 Flash
-        </p>
       </div>
     </div>
   )

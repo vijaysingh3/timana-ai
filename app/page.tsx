@@ -7,9 +7,8 @@ import ChatArea from '@/components/ChatArea'
 import InputBox from '@/components/InputBox'
 import Welcome from '@/components/Welcome'
 import { Message, Conversation } from '@/types'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, Plus } from 'lucide-react'
 
-// ============ AUTH SCREEN ============
 function AuthScreen() {
   const [loading, setLoading] = useState(false)
 
@@ -27,25 +26,26 @@ function AuthScreen() {
   }
 
   return (
-    <div className="min-h-screen bg-timana-bg flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-timana-bg flex items-center justify-center px-4 py-8">
+      <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">🤖 Timana AI</h1>
-          <p className="text-gray-400">Apna personal AI assistant</p>
+          <div className="text-5xl mb-4">🤖</div>
+          <h1 className="text-3xl font-bold text-white mb-2">Timana AI</h1>
+          <p className="text-gray-400 text-sm">Apna personal AI assistant</p>
         </div>
-        <div className="bg-timana-sidebar border border-timana-border rounded-xl p-8">
-          <h2 className="text-xl font-semibold text-white mb-2 text-center">Swagat Hai! 🙏</h2>
-          <p className="text-gray-400 text-sm text-center mb-8">Apne Google account se login karo</p>
+        <div className="bg-timana-sidebar border border-timana-border rounded-2xl p-6">
+          <h2 className="text-lg font-semibold text-white mb-1 text-center">Swagat Hai! 🙏</h2>
+          <p className="text-gray-400 text-xs text-center mb-6">Apne Google account se login karo</p>
           <button
             onClick={handleGoogleLogin}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-3 py-3 bg-white text-gray-800 rounded-lg font-medium hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="w-full flex items-center justify-center gap-3 py-3 bg-white text-gray-800 rounded-xl font-medium hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 text-sm"
           >
             {loading ? (
               <span className="text-gray-600">⏳ Redirect ho raha hai...</span>
             ) : (
               <>
-                <svg width="20" height="20" viewBox="0 0 48 48">
+                <svg width="18" height="18" viewBox="0 0 48 48">
                   <path fill="#FFC107" d="M43.6 20H24v8h11.3C33.6 33.1 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 19.7-8 19.7-20 0-1.3-.1-2.7-.1-4z"/>
                   <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.1 18.9 12 24 12c3 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/>
                   <path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.9 13.5-5.1l-6.2-5.2C29.4 35.5 26.8 36 24 36c-5.2 0-9.6-3-11.3-7.3l-6.5 5C9.6 39.6 16.3 44 24 44z"/>
@@ -55,14 +55,13 @@ function AuthScreen() {
               </>
             )}
           </button>
-          <p className="text-center text-gray-500 text-xs mt-6">Login karke aap hamare terms se agree karte ho</p>
+          <p className="text-center text-gray-500 text-xs mt-4">Login karke aap hamare terms se agree karte ho</p>
         </div>
       </div>
     </div>
   )
 }
 
-// ============ MAIN PAGE ============
 export default function Home() {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
@@ -70,7 +69,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false)
   const [user, setUser] = useState<any>(null)
   const [authChecked, setAuthChecked] = useState(false)
-  const [sidebarOpen, setSidebarOpen] = useState(false) // ✅ Mobile sidebar state
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -135,14 +134,14 @@ export default function Home() {
     if (data) {
       setCurrentConversationId(data.id)
       setMessages([])
-      setSidebarOpen(false) // ✅ Mobile pe sidebar band karo
+      setSidebarOpen(false)
       loadConversations()
     }
   }
 
   const selectConversation = async (id: string) => {
     setCurrentConversationId(id)
-    setSidebarOpen(false) // ✅ Mobile pe sidebar band karo
+    setSidebarOpen(false)
     const { data } = await supabase
       .from('messages')
       .select('*')
@@ -263,7 +262,10 @@ export default function Home() {
   if (!authChecked) {
     return (
       <div className="min-h-screen bg-timana-bg flex items-center justify-center">
-        <div className="text-gray-400">Loading...</div>
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-timana-accent border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-gray-400 text-sm">Loading...</p>
+        </div>
       </div>
     )
   }
@@ -271,21 +273,24 @@ export default function Home() {
   if (!user) return <AuthScreen />
 
   return (
-    <div className="flex h-screen bg-timana-bg overflow-hidden">
-
-      {/* ✅ Mobile Overlay — sidebar open hone pe background dim */}
+    <div
+      className="flex bg-timana-bg"
+      style={{ height: '100dvh', overflow: 'hidden' }}
+    >
+      {/* Mobile Overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden"
+          className="fixed inset-0 bg-black bg-opacity-60 z-20 md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
-      {/* ✅ Sidebar — mobile pe slide in/out */}
+      {/* Sidebar */}
       <div className={`
-        fixed md:relative z-30 h-full transition-transform duration-300
+        fixed md:relative z-30 h-full
+        transition-transform duration-300 ease-in-out
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-        md:translate-x-0 md:flex
+        md:translate-x-0 md:flex flex-shrink-0
       `}>
         <Sidebar
           conversations={conversations}
@@ -297,43 +302,46 @@ export default function Home() {
         />
       </div>
 
-      {/* ✅ Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
-        {/* ✅ Mobile Top Bar */}
-        <div className="md:hidden flex items-center gap-3 px-4 py-3 bg-timana-sidebar border-b border-timana-border">
+        {/* Mobile Top Bar */}
+        <div className="md:hidden flex items-center gap-2 px-3 py-2 bg-timana-sidebar border-b border-timana-border flex-shrink-0">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 text-gray-400 hover:text-white transition-colors"
+            className="p-2 text-gray-400 hover:text-white transition-colors rounded-lg"
           >
-            {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
+            {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
-          <h1 className="text-white font-semibold text-lg">🤖 Timana AI</h1>
-          <div className="ml-auto">
-            <button
-              onClick={createNewChat}
-              className="text-xs px-3 py-1.5 bg-timana-accent text-white rounded-lg"
-            >
-              + Naya
-            </button>
-          </div>
+          <h1 className="text-white font-semibold text-base flex-1 text-center">🤖 Timana AI</h1>
+          <button
+            onClick={createNewChat}
+            className="p-2 text-gray-400 hover:text-white transition-colors rounded-lg"
+          >
+            <Plus size={20} />
+          </button>
         </div>
 
-        {messages.length === 0 ? (
-          <Welcome onQuickAsk={(q) => {
-            if (!currentConversationId) {
-              createNewChat().then(() => sendMessage(q))
-            } else {
-              sendMessage(q)
-            }
-          }} />
-        ) : (
-          <ChatArea
-            messages={messages}
-            isLoading={isLoading}
-            messagesEndRef={messagesEndRef}
-          />
-        )}
+        {/* Chat or Welcome */}
+        <div className="flex-1 overflow-hidden flex flex-col min-h-0">
+          {messages.length === 0 ? (
+            <Welcome onQuickAsk={(q) => {
+              if (!currentConversationId) {
+                createNewChat().then(() => sendMessage(q))
+              } else {
+                sendMessage(q)
+              }
+            }} />
+          ) : (
+            <ChatArea
+              messages={messages}
+              isLoading={isLoading}
+              messagesEndRef={messagesEndRef}
+            />
+          )}
+        </div>
+
+        {/* Input */}
         <InputBox
           onSend={sendMessage}
           isLoading={isLoading}

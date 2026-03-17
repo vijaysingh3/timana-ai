@@ -16,7 +16,7 @@ const quickActions = [
   {
     icon: Code,
     title: 'Code Help',
-    description: 'Python mein loop kaise kaam karta hai?',
+    description: 'Python loop explain karo',
     query: 'Python mein loop kaise kaam karta hai?'
   },
   {
@@ -27,41 +27,42 @@ const quickActions = [
   },
   {
     icon: Sparkles,
-    title: 'Creative Writing',
-    description: 'Ek kahani likho',
+    title: 'Creative',
+    description: 'Ek chhoti kahani likho',
     query: 'Ek chhoti si kahani likho'
   }
 ]
 
 export default function Welcome({ onQuickAsk }: WelcomeProps) {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-4 py-8 overflow-y-auto">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">Timana AI</h1>
-        <p className="text-base md:text-xl text-gray-400">Namaste! Aaj kya help chahiye? 🙏</p>
+    <div className="flex-1 flex flex-col items-center justify-center px-4 py-6 overflow-y-auto">
+      <div className="text-center mb-6">
+        <div className="text-4xl mb-3">🤖</div>
+        <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">Timana AI</h1>
+        <p className="text-sm md:text-base text-gray-400">Namaste! Aaj kya help chahiye? 🙏</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-2xl">
+      <div className="grid grid-cols-2 gap-2 w-full max-w-lg">
         {quickActions.map((action, index) => (
           <button
             key={index}
             onClick={() => onQuickAsk(action.query)}
-            className="flex items-start gap-3 p-4 bg-timana-input rounded-lg border border-timana-border hover:border-gray-500 transition-all text-left group active:scale-95"
+            className="flex flex-col gap-2 p-3 md:p-4 bg-timana-input rounded-xl border border-timana-border hover:border-gray-500 transition-all text-left active:scale-95"
           >
-            <div className="p-2 bg-timana-bg rounded-lg group-hover:bg-timana-accent/20 flex-shrink-0">
-              <action.icon size={18} className="text-timana-accent" />
+            <div className="p-1.5 bg-timana-bg rounded-lg w-fit">
+              <action.icon size={16} className="text-timana-accent" />
             </div>
-            <div className="min-w-0">
-              <h3 className="text-white font-medium mb-1 text-sm md:text-base">{action.title}</h3>
-              <p className="text-xs md:text-sm text-gray-400 truncate">{action.description}</p>
+            <div>
+              <h3 className="text-white font-medium text-xs md:text-sm">{action.title}</h3>
+              <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{action.description}</p>
             </div>
           </button>
         ))}
       </div>
 
-      <div className="mt-8 text-xs md:text-sm text-gray-500 text-center px-4">
+      <p className="mt-6 text-xs text-gray-500 text-center">
         💡 Hindi ya English — dono mein baat karo!
-      </div>
+      </p>
     </div>
   )
 }
