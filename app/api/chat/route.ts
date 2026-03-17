@@ -5,7 +5,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
 
     const response = await fetch(
-      'https://kvtrzaaxwsxlisdjucxk.supabase.co/functions/v1/glm-ai-test',
+      'https://kvtrzaaxwsxlisdjucxk.supabase.co/functions/v1/GLM-API',
       {
         method: 'POST',
         headers: {
