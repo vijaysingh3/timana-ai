@@ -10,63 +10,21 @@ import { Message, Conversation } from '@/types'
 
 // ============ AUTH SCREEN ============
 function AuthScreen() {
-  const [isLogin, setIsLogin] = useState(true)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [name, setName] = useState('')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
 
-  const handleAuth = async () => {
-    if (!email || !password) {
-      setError('Email aur Password dono bharo!')
-      return
-    }
-    if (!isLogin && !name) {
-      setError('Apna naam bharo!')
-      return
-    }
-    if (password.length < 6) {
-      setError('Password kam se kam 6 characters ka hona chahiye!')
-      return
-    }
-
+  const handleGoogleLogin = async () => {
     setLoading(true)
-    setError('')
-    setSuccess('')
-
-    try {
-      if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({ email, password })
-        if (error) setError('Email ya Password galat hai!')
-      } else {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { data: { full_name: name } }
-        })
-        if (error) {
-          setError(error.message)
-        } else {
-          setSuccess('Account ban gaya! Ab login karo.')
-          setIsLogin(true)
-        }
-      }
-    } catch {
-      setError('Kuch galat hua, dobara try karo!')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') handleAuth()
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin }
+    })
+    setLoading(false)
   }
 
   return (
     <div className="min-h-screen bg-timana-bg flex items-center justify-center px-4">
       <div className="w-full max-w-md">
+
         {/* Logo */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">🤖 Timana AI</h1>
@@ -75,81 +33,36 @@ function AuthScreen() {
 
         {/* Card */}
         <div className="bg-timana-sidebar border border-timana-border rounded-xl p-8">
-          <h2 className="text-xl font-semibold text-white mb-6 text-center">
-            {isLogin ? 'Login Karo' : 'Account Banao'}
+          <h2 className="text-xl font-semibold text-white mb-2 text-center">
+            Swagat Hai! 🙏
           </h2>
+          <p className="text-gray-400 text-sm text-center mb-8">
+            Apne Google account se login karo
+          </p>
 
-          {/* Name field - only for register */}
-          {!isLogin && (
-            <div className="mb-4">
-              <label className="block text-sm text-gray-400 mb-2">Aapka Naam</label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Jaise: Vijay Singh"
-                className="w-full bg-timana-input border border-timana-border rounded-lg px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-gray-400 transition-colors"
-              />
-            </div>
-          )}
-
-          {/* Email */}
-          <div className="mb-4">
-            <label className="block text-sm text-gray-400 mb-2">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="aapka@email.com"
-              className="w-full bg-timana-input border border-timana-border rounded-lg px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-gray-400 transition-colors"
-            />
-          </div>
-
-          {/* Password */}
-          <div className="mb-6">
-            <label className="block text-sm text-gray-400 mb-2">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Kam se kam 6 characters"
-              className="w-full bg-timana-input border border-timana-border rounded-lg px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-gray-400 transition-colors"
-            />
-          </div>
-
-          {/* Error / Success Messages */}
-          {error && (
-            <div className="mb-4 p-3 bg-red-900/30 border border-red-700 rounded-lg text-red-400 text-sm">
-              ❌ {error}
-            </div>
-          )}
-          {success && (
-            <div className="mb-4 p-3 bg-green-900/30 border border-green-700 rounded-lg text-green-400 text-sm">
-              ✅ {success}
-            </div>
-          )}
-
-          {/* Submit Button */}
+          {/* Google Login Button */}
           <button
-            onClick={handleAuth}
+            onClick={handleGoogleLogin}
             disabled={loading}
-            className="w-full py-3 bg-timana-accent text-white rounded-lg font-medium hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="w-full flex items-center justify-center gap-3 py-3 bg-white text-gray-800 rounded-lg font-medium hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
-            {loading ? '⏳ Wait karo...' : isLogin ? '🚀 Login Karo' : '✨ Account Banao'}
+            {loading ? (
+              <span className="text-gray-600">⏳ Redirect ho raha hai...</span>
+            ) : (
+              <>
+                <svg width="20" height="20" viewBox="0 0 48 48">
+                  <path fill="#FFC107" d="M43.6 20H24v8h11.3C33.6 33.1 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 19.7-8 19.7-20 0-1.3-.1-2.7-.1-4z"/>
+                  <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.1 18.9 12 24 12c3 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/>
+                  <path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.9 13.5-5.1l-6.2-5.2C29.4 35.5 26.8 36 24 36c-5.2 0-9.6-3-11.3-7.3l-6.5 5C9.6 39.6 16.3 44 24 44z"/>
+                  <path fill="#1976D2" d="M43.6 20H24v8h11.3c-.9 2.4-2.5 4.4-4.6 5.8l6.2 5.2C40.8 35.4 44 30.1 44 24c0-1.3-.1-2.7-.4-4z"/>
+                </svg>
+                <span>Google se Login Karo</span>
+              </>
+            )}
           </button>
 
-          {/* Toggle Login/Register */}
-          <p className="text-center text-gray-400 text-sm mt-6">
-            {isLogin ? 'Naya account chahiye?' : 'Pehle se account hai?'}
-            <button
-              onClick={() => { setIsLogin(!isLogin); setError(''); setSuccess('') }}
-              className="text-timana-accent hover:underline ml-2"
-            >
-              {isLogin ? 'Register Karo' : 'Login Karo'}
-            </button>
+          <p className="text-center text-gray-500 text-xs mt-6">
+            Login karke aap hamare terms se agree karte ho
           </p>
         </div>
       </div>
